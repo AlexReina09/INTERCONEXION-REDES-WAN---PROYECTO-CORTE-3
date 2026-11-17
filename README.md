@@ -7,25 +7,44 @@ Tabla de contenido
 1.1 Objetivos	3
 
 1.2 Alcance y limitaciones	3
+
 3. Requerimientos de software	3
+   
 2.1 Requerimientos funcionales	3
+   
 2.2 Requerimientos no funcionales	4
-4. Desarrollo del laboratorio	4
+
+6. Desarrollo del laboratorio	4
+   
 3.1 Arquitectura física y medios de conexión	4
+
 3.2 Servicios de dispositivos	4
+
 3.3 ISP, ancho de banda y redundancia	5
+
 3.4 Protocolos por capa	5
+
 3.5 Plan de direccionamiento y VLAN	5
+
 3.6 Subnetting: ejemplo resuelto	6
+
 3.7 Dispositivos recomendados por piso	6
+
 3.8 Configuración por fabricante	6
+
 3.9 Ciberdefensa y VPN	7
+
 3.10 Panel IA local	7
+
 3.11 Pruebas de failover	7
+
 3.12 Entrenamiento supervisado	7
+
 3.13 Control de versiones y repositorio	7
-5. Conclusiones	8
-6. Bibliografía	8
+
+8. Conclusiones	8
+   
+10. Bibliografía	8
 
  
 1. Introducción
