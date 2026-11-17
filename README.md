@@ -1,32 +1,54 @@
 FlexARWAN
 
-
 Tabla de contenido
+
 1. Introducción	3
+   
 1.1 Objetivos	3
+
 1.2 Alcance y limitaciones	3
-2. Requerimientos de software	3
+
+3. Requerimientos de software	3
+   
 2.1 Requerimientos funcionales	3
+
 2.2 Requerimientos no funcionales	4
-3. Desarrollo del laboratorio	4
+
+5. Desarrollo del laboratorio	4
+   
 3.1 Arquitectura física y medios de conexión	4
+
 3.2 Servicios de dispositivos	4
+
 3.3 ISP, ancho de banda y redundancia	5
+
 3.4 Protocolos por capa	5
+
 3.5 Plan de direccionamiento y VLAN	5
+
 3.6 Subnetting: ejemplo resuelto	6
+
 3.7 Dispositivos recomendados por piso	6
+
 3.8 Configuración por fabricante	6
+
 3.9 Ciberdefensa y VPN	7
+
 3.10 Panel IA local	7
+
 3.11 Pruebas de failover	7
+
 3.12 Entrenamiento supervisado	7
+
 3.13 Control de versiones y repositorio	7
-4. Conclusiones	8
-5. Bibliografía	8
 
+7. Conclusiones	8
+   
+9. Bibliografía	8
 
- 
+----------------------------------------------------------------------------
+----------------------------------------------------------------------------
+
 1. Introducción:
    
 Un edificio de 20 pisos con servicios de datos, voz, video, WiFi y videovigilancia (CCTV) necesita una red ordenada, segura y con respaldo. Configurar a mano switches, routers, puntos de acceso y firewalls de varios fabricantes genera errores y diferencias entre pisos. FlexARWAN es una herramienta web, autónoma y de ejecución local, que calcula subredes, planifica el direccionamiento por piso, importa el inventario, genera configuraciones iniciales y simula fallos de enlace.
