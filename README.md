@@ -1,241 +1,113 @@
-FlexARWAN
+# FlexARWAN
 
-Tabla de contenido
+Herramienta web de **un solo archivo** (`index.html`) para planificar y configurar la red de un edificio de 20 pisos. Funciona en el navegador, sin instalación, sin servidor y sin enviar datos a terceros.
 
-1. Introducción	3
-   
-1.1 Objetivos	3
+> **Versión actual:** 0.0.0 (primera entrega). Revisa siempre las configuraciones generadas en laboratorio antes de aplicarlas en producción.
 
-1.2 Alcance y limitaciones	3
+Proyecto académico de Interconexión de Redes WAN · Fundación Universitaria Ucompensar.
 
-3. Requerimientos de software	3
-   
-2.1 Requerimientos funcionales	3
+## Funciones
 
-2.2 Requerimientos no funcionales	4
+| Pestaña | Qué hace |
+|---|---|
+| **Subnetting** | Calcula red, máscara, broadcast, primer/último host y hosts útiles (IPv4), y lista subredes /64 (IPv6). Permite dividir una red en 1, 4, 8, 16, 32 o 64 subredes. |
+| **Plan IP y VLAN** | Plan editable por piso y servicio (datos, voz, video, WiFi, CCTV): VLAN, CIDR IPv4, pool DHCP e IPv6 /64. Valida los valores mientras se escriben. |
+| **Inventario CSV** | Importa la lista de equipos (hostname, fabricante, modelo, piso, puertos, rol). Si falta el número de puertos, lo deduce del modelo. |
+| **Configuración** | Genera scripts iniciales para **Cisco, Huawei, Fortinet, MikroTik y HP/Aruba**, por piso o para los 20 a la vez. Copiar o descargar como `.txt`. |
+| **Failover** | Simula la caída de ISP 1, ISP 2, Uplink core A y Uplink core B, y muestra el estado de los 20 pisos. |
+| **Panel IA local** | Revisa una configuración con reglas locales (expresiones regulares). El análisis ocurre en tu navegador. |
+| **Acceso** | Genera usuario y contraseña aleatorios con `crypto.getRandomValues`. No se guardan en el proyecto. |
 
-5. Desarrollo del laboratorio	4
-   
-3.1 Arquitectura física y medios de conexión	4
+En la barra superior: **Guardar proyecto**, **Descargar JSON** y **Descargar README.md**.
 
-3.2 Servicios de dispositivos	4
+## Uso rápido
 
-3.3 ISP, ancho de banda y redundancia	5
+1. Descarga `index.html`.
+2. Ábrelo en un navegador moderno (doble clic).
+3. Calcula subredes, ajusta el plan, importa tu inventario y genera las configuraciones.
 
-3.4 Protocolos por capa	5
+No requiere `npm`, compilación ni dependencias.
 
-3.5 Plan de direccionamiento y VLAN	5
+## Despliegue en GitHub Pages
 
-3.6 Subnetting: ejemplo resuelto	6
+1. Sube el repositorio a GitHub.
+2. En **Settings → Pages**, elige **Deploy from a branch**, rama `main` y carpeta `/ (root)`.
+3. Tu app quedará en `https://<tu-usuario>.github.io/<nombre-del-repositorio>/`.
 
-3.7 Dispositivos recomendados por piso	6
+## Formato del CSV de inventario
 
-3.8 Configuración por fabricante	6
+```csv
+hostname,fabricante,modelo,piso,puertos,rol
+SW-P1,Cisco,Catalyst 9300-48,1,,switch
+SW-P2,Huawei,S5735-L24,2,,switch
+FW-CORE,Fortinet,FortiGate 100F,0,,firewall
+RT-EDGE,MikroTik,CCR2004,0,12,router
+AP-P1,HP,Aruba AP-515,1,2,access point
+```
 
-3.9 Ciberdefensa y VPN	7
+- La primera línea (encabezado) es opcional; se omite si contiene `hostname`.
+- Si `puertos` está vacío, se busca 48, 24, 16 u 8 en el nombre del modelo.
+- El separador es la coma. No se admiten campos entre comillas que contengan comas.
+- El botón **Cargar ejemplo** carga el contenido de arriba.
 
-3.10 Panel IA local	7
+## Plan por defecto
 
-3.11 Pruebas de failover	7
+Para el piso `f` (1 a 20) la herramienta crea cinco servicios:
 
-3.12 Entrenamiento supervisado	7
+| Servicio | VLAN | CIDR IPv4 | IPv6 /64 |
+|---|---|---|---|
+| datos | 100 + f | 10.f.0.0/24 | 2001:db8:f:0::/64 |
+| voz | 200 + f | 10.f.10.0/24 | 2001:db8:f:1::/64 |
+| video | 300 + f | 10.f.20.0/24 | 2001:db8:f:2::/64 |
+| wifi | 400 + f | 10.f.30.0/24 | 2001:db8:f:3::/64 |
+| cctv | 500 + f | 10.f.40.0/24 | 2001:db8:f:4::/64 |
 
-3.13 Control de versiones y repositorio	7
+Ejemplo, piso 5: datos = VLAN 105, 10.5.0.0/24. El número de piso va en hexadecimal dentro de la dirección IPv6. El pool DHCP se calcula como `red + 10` hasta `broadcast − 5` cuando la subred tiene 20 hosts o más.
 
-7. Conclusiones	8
-   
-9. Bibliografía	8
+> El prefijo `2001:db8::/32` está reservado para documentación (RFC 3849). Reemplázalo por el que te asigne tu ISP.
 
-----------------------------------------------------------------------------
-----------------------------------------------------------------------------
+## Endurecimiento incluido en los scripts
 
-1. Introducción:
-   
-Un edificio de 20 pisos con servicios de datos, voz, video, WiFi y videovigilancia (CCTV) necesita una red ordenada, segura y con respaldo. Configurar a mano switches, routers, puntos de acceso y firewalls de varios fabricantes genera errores y diferencias entre pisos. FlexARWAN es una herramienta web, autónoma y de ejecución local, que calcula subredes, planifica el direccionamiento por piso, importa el inventario, genera configuraciones iniciales y simula fallos de enlace.
+| Fabricante | Medidas |
+|---|---|
+| Cisco | SSH versión 2, HTTP/HTTPS del servidor desactivados, `line vty` solo SSH con `login local`, tiempo de inactividad de 10 min. |
+| Huawei | `stelnet` activo, telnet desactivado, VTY con AAA y solo SSH. |
+| HP / Aruba | `no telnet-server`, SSH activo, gestión web desactivada. |
+| MikroTik | Desactiva telnet, ftp, www, api y api-ssl; SSH en el puerto 22. |
+| Fortinet | Sin bloque adicional; la interfaz permite `ping https ssh`. |
 
-1.1 Objetivos
+## Reglas del Panel IA local
 
-•	Calcular subredes IPv4 correctamente (red, broadcast y hosts útiles) y planificar IPv4 e IPv6 por piso y por servicio.
-•	Generar configuraciones iniciales para Cisco, Huawei, Fortinet, MikroTik y HP a partir de un único plan.
-•	Detectar configuraciones inseguras con reglas locales, sin enviar datos fuera del equipo.
-•	Simular la caída de enlaces y proveedores (ISP) para evaluar la redundancia por piso.
+Detecta: Telnet, comunidades SNMP `public`/`private`, contraseñas por defecto, reglas `permit any any` o `accept all`, administración HTTP, FTP y uso de la VLAN 1. Además avisa si no hay SSH ni trunks con VLAN permitidas explícitas.
 
-1.2 Alcance y limitaciones
+No es un modelo de IA remoto ni sustituye una auditoría profesional.
 
-La versión V0.0.0 entrega una herramienta funcional como página HTML. Los scripts son una base inicial por familia de fabricante: deben validarse en laboratorio contra el modelo y el firmware reales antes de producción. Ningún sistema puede garantizar una confiabilidad del 100 %; el diseño reduce el riesgo mediante redundancia, validación de entradas y pruebas, pero no lo elimina. El agente con IA, el acceso SSH remoto automatizado, la VPN configurable y la vista por capas de protocolos están planificados para versiones posteriores.
+## Limitaciones conocidas (V0.0.0)
 
-3. Requerimientos de software
+- **No se conecta a los equipos.** SSH y Telnet no pueden abrirse desde una página web. Copia el script y pégalo en la consola, o usa un agente local como Ansible o Netmiko.
+- Los **puertos de uplink** de los scripts son valores de ejemplo (por ejemplo, `Gi1/0/47-48` en Cisco). Ajústalos al modelo real.
+- El **Failover** es una simulación simplificada: aplica el mismo estado a todos los pisos.
+- El proyecto se guarda en el `localStorage` del navegador (clave `flexarwan`); otro navegador o equipo no verá los datos. Usa **Descargar JSON** como respaldo.
+- Las fuentes Manrope y JetBrains Mono se cargan desde Google Fonts. Sin conexión, el navegador usa fuentes del sistema.
 
-2.1 Requerimientos funcionales
+## Estructura del repositorio
 
+```text
+.
+├── index.html     # La aplicación completa (HTML + CSS + JS)
+├── README.md
+├── CHANGELOG.md
+└── .gitignore
+```
 
-<img width="763" height="412" alt="image" src="https://github.com/user-attachments/assets/c882c161-a18f-4ccb-817f-ca5ad9e0b39f" />
+## Hoja de ruta
 
+Funciones previstas (ver [CHANGELOG](CHANGELOG.md)): agente con IA y conexión SSH, configuración de VPN IPsec/IKEv2 y vista de protocolos por capa.
 
-2.2 Requerimientos no funcionales
+## Versionado
 
-•	Seguridad: sin envío de datos a terceros; contraseñas generadas con un generador aleatorio criptográfico del navegador.
+Se sigue [Versionado Semántico](https://semver.org/lang/es/). El historial está en [CHANGELOG.md](CHANGELOG.md).
 
-•	Usabilidad: interfaz simple, consistente, de claridad visual y con retroalimentación inmediata mediante mensajes.
+## Licencia
 
-•	Portabilidad y responsividad: un solo archivo HTML, con tema claro y oscuro y adaptación a pantallas pequeñas.
-
-•	Mantenibilidad: código comentado en español y control de versiones (V0.0.0).
-
-•	Escalabilidad: parámetros editables (VLAN, prefijos) y soporte para el inventario de los 20 pisos.
-
-3. Desarrollo del laboratorio
-
-3.1 Arquitectura física y medios de conexión
-
-El diseño usa una topología jerárquica de tres capas simplificada: acceso en cada piso, distribución en el piso de equipos y core redundante (Core A y Core B). Cada piso se conecta con dos enlaces de fibra, uno a cada core.
-
-
-<img width="639" height="244" alt="image" src="https://github.com/user-attachments/assets/2d9a3366-bf7b-43a0-8aec-e31d6d8c67a2" />
-
-
-3.2 Servicios de dispositivos
-
-Los equipos físicos (routers, switches, puntos de acceso, firewalls, teléfonos y cámaras IP) y lógicos (DHCP, DNS, NAT, VPN, ACL, QoS, monitoreo y registros) conectan, gestionan y protegen la comunicación entre computadoras y sistemas. El router enruta entre redes y hacia el ISP; el switch conmuta tramas y segmenta con VLAN; el punto de acceso extiende la red de forma inalámbrica; el firewall filtra y aplica políticas; el teléfono IP y la cámara IP son terminales que exigen priorización (voz) o segmentación estricta (CCTV).
-
-3.3 ISP, ancho de banda y redundancia
-
-Se recomienda contratar dos ISP con acometidas físicas distintas y, si es posible, con ancho de banda simétrico garantizado por contrato (SLA). El dimensionamiento inicial debe medirse con tráfico real; como referencia de diseño se calcula el consumo por servicio (datos, voz, video, CCTV) y se agrega un margen de crecimiento. Los firewalls operan en alta disponibilidad y el simulador muestra el efecto de perder un ISP: de «redundante» a «sin redundancia» y, con ambos caídos, «sin Internet».
-
-3.4 Protocolos por capa
-
-
-<img width="639" height="170" alt="image" src="https://github.com/user-attachments/assets/dd55e2d2-8044-4b25-8fdc-c4c015ea2349" />
-
-
-3.5 Plan de direccionamiento y VLAN
-
-Cada servicio usa el esquema 10.<piso>.<tercer octeto>.0/<prefijo>. En IPv6 se usa 2001:db8:<piso>:<VLAN>::/64; ese prefijo está reservado para documentación (RFC 3849) y debe reemplazarse por el entregado por el ISP.
-
-<img width="640" height="181" alt="image" src="https://github.com/user-attachments/assets/2eb253ea-1b9a-4714-a8ec-662fa2572a8d" />
-
-
-3.6 Subnetting: ejemplo resuelto
-
-
-<img width="649" height="209" alt="image" src="https://github.com/user-attachments/assets/00dd1efa-38fd-4925-b86c-4de90625bc43" />
-
-
-
-Verificación: el incremento es 256 − 192 = 64, así que las subredes comienzan en 0, 64, 128 y 192. Esto coincide con la salida de la calculadora de FlexARWAN.
-
-3.7 Dispositivos recomendados por piso
-
-•	2 switches de acceso PoE de 48 puertos (principal y respaldo) con 2 uplinks de fibra de 10 G.
-
-•	Puntos de acceso Wi-Fi: 2 por cada 500 m² de área útil.
-
-•	Teléfonos IP: uno por puesto de trabajo con voz; cámaras IP: aproximadamente 1 por cada 80 m².
-
-•	Piso de equipos: 2 routers WAN, 2 firewalls en alta disponibilidad y 2 switches core.
-
-Estas cifras son una guía inicial y deben ajustarse al levantamiento real de cada piso.
-
-
-<img width="645" height="260" alt="image" src="https://github.com/user-attachments/assets/32f58498-b1cf-4b7e-a8d6-0960abcfe044" />
-
-
-3.8 Configuración por fabricante
-
-<img width="643" height="264" alt="image" src="https://github.com/user-attachments/assets/2cc2485d-0922-44e5-a499-b0c0ac99dc78" />
-
-
-La herramienta distingue el fabricante seleccionado y genera la sintaxis correspondiente. Los puertos de uplink (por ejemplo TenGigabitEthernet1/1/1-2 en Cisco o puertos 49–52 en HP) son valores de ejemplo y deben ajustarse al modelo exacto con ayuda del inventario CSV.
-
-3.9 Ciberdefensa y VPN
-
-•	Acceso administrativo solo por SSH versión 2; Telnet desactivado en producción por enviar datos en texto claro.
-
-•	VLAN de gestión aislada (99) y listas de control de acceso entre VLAN con el principio de mínimo privilegio.
-
-•	802.1X en puertos de acceso, DHCP snooping y Dynamic ARP Inspection contra suplantación.
-
-•	VPN IPsec con IKEv2, cifrado AES-256-GCM e integridad SHA-384, siguiendo las guías del NIST.
-
-•	Contra ataques asistidos por IA (por ejemplo, phishing o fuerza bruta automatizada): MFA, 
-bloqueo temporal por intentos, segmentación de CCTV y VoIP, registros centralizados y detección de anomalías.
-
-3.10 Panel IA local
-
-El panel aplica reglas locales (expresiones regulares) sobre la configuración pegada por el usuario. Detecta Telnet activo, comunidades SNMP por defecto, contraseñas débiles, servicios HTTP/FTP sin cifrar, reglas «permitir todo» y ausencia de SSH o de protecciones de capa 2. No usa un modelo remoto, por lo que ningún dato sale del equipo. No sustituye una auditoría profesional.
-
-3.11 Pruebas de failover
-
-
-<img width="644" height="159" alt="image" src="https://github.com/user-attachments/assets/b9cc74c1-d2fd-4850-87e9-62aebd3623cf" />
-
-
-3.12 Entrenamiento supervisado
-
-Para el entrenamiento supervisado de las reglas de auditoría, se propone un conjunto de configuraciones etiquetadas por un especialista (seguras e inseguras). Cada regla se evalúa contra ese conjunto midiendo falsos positivos y falsos negativos, y el especialista revisa y corrige las reglas antes de publicar una nueva versión. Cuando se incorpore un modelo de IA, este flujo de revisión humana se mantiene como requisito.
-
-
-3.13 Control de versiones y repositorio
-
-La versión actual es V0.0.0. Se propone un repositorio público en GitHub con README, una rama de trabajo (develop) además de main y al menos cinco commits con mensajes claros, por ejemplo: «Agrega calculadora de subredes IPv4», «Agrega editor de VLAN y plan por piso», «Agrega generador de configuración multifabricante», «Agrega panel de auditoría local» y «Agrega simulador de failover».
-
-4. Conclusiones
-
-•	La automatización del plan IP y de las configuraciones reduce errores manuales y mantiene la coherencia entre los 20 pisos.
-
-•	Un único plan de VLAN y direccionamiento permite generar sintaxis para varios fabricantes, aunque cada modelo requiere validación en laboratorio.
-
-•	La redundancia debe probarse: el simulador muestra que un solo core o ISP caído deja el servicio, pero sin respaldo.
-
-•	La auditoría local mejora la privacidad al no enviar configuraciones a terceros, pero sus reglas deben ampliarse y supervisarse.
-
-•	Trabajo futuro: agente con IA y SSH, VPN configurable, vista por capas de protocolos y pruebas con equipos reales.
-
-5. Bibliografía
-
-   
-Cisco Systems. (s. f.). Documentación oficial de Cisco IOS XE y Catalyst. Cisco Documentation. https://www.cisco.com/c/en/us/support/index.html
-Deering, S., & Hinden, R. (2017). Internet Protocol, Version 6 (IPv6) Specification (RFC 8200). IETF.
-Fortinet. (s. f.). FortiOS Administration Guide. Fortinet Document Library. https://docs.fortinet.com
-Fuller, V., & Li, T. (2006). Classless Inter-domain Routing (CIDR) (RFC 4632). IETF.
-Huawei Technologies. (s. f.). Documentación de productos de redes empresariales (VRP). Huawei Support. https://support.huawei.com
-IEEE. (2018). IEEE Std 802.1Q-2018: Bridges and Bridged Networks. IEEE.
-IEEE. (2020). IEEE Std 802.1X-2020: Port-Based Network Access Control. IEEE.
-Kaufman, C., Hoffman, P., Nir, Y., Eronen, P., & Kivinen, T. (2014). Internet Key Exchange Protocol Version 2 (IKEv2) (RFC 7296). IETF.
-Kurose, J. F., & Ross, K. W. (2021). Computer Networking: A Top-Down Approach (8.ª ed.). Pearson.
-MikroTik. (s. f.). RouterOS Manual. MikroTik Documentation. https://help.mikrotik.com/docs
-National Institute of Standards and Technology. (2020). Security and Privacy Controls for Information Systems and Organizations (SP 800-53, Rev. 5). NIST.
-National Institute of Standards and Technology. (2020). Guide to IPsec VPNs (SP 800-77, Rev. 1). NIST.
-Rekhter, Y., Moskowitz, B., Karrenberg, D., de Groot, G. J., & Lear, E. (1996). Address Allocation for Private Internets (RFC 1918). IETF.
-Huston, G., Lord, A., & Smith, P. (2004). IPv6 Address Prefix Reserved for Documentation (RFC 3849). IETF.
-Ylonen, T., & Lonvick, C. (2006). The Secure Shell (SSH) Protocol Architecture (RF.
-
-
-Capturas De pantalla Módulos Herramienta:
-
-
-<img width="975" height="759" alt="image" src="https://github.com/user-attachments/assets/1e1e6ced-0c1e-45ce-b9cb-872e064caa3d" />
-
-
-<img width="975" height="429" alt="image" src="https://github.com/user-attachments/assets/04fdd715-1b8b-43f5-a9c3-0343fdeb720c" />
-
-
-<img width="1086" height="547" alt="image" src="https://github.com/user-attachments/assets/eadfa608-a978-4312-852c-b75124cbe901" />
-
-
-<img width="1106" height="577" alt="image" src="https://github.com/user-attachments/assets/791748a1-cc7b-4252-817f-e2c76e791b44" />
-
-
-<img width="1092" height="390" alt="image" src="https://github.com/user-attachments/assets/78c62790-d072-445c-9d21-718c0bce0376" />
-
-
-<img width="1098" height="575" alt="image" src="https://github.com/user-attachments/assets/21c9a456-8907-4c77-a5aa-89e52ee1a3bc" />
-
-
-<img width="1105" height="557" alt="image" src="https://github.com/user-attachments/assets/1f708c9d-62d2-4621-8917-22b6bb2d9be1" />
-
-
-<img width="1170" height="502" alt="image" src="https://github.com/user-attachments/assets/b383c45d-8877-4f4a-af2a-cf6878f4fdac" />
-
-
-<img width="1079" height="464" alt="image" src="https://github.com/user-attachments/assets/60be0cdd-06d6-419b-b4fd-ec23c2b36df4" />
+Por definir.

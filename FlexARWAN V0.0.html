@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FlexARWAN V0.0</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=JetBrains+Mono&display=swap">
+<style>
+/* Tokens de color: claro por defecto, oscuro por preferencia del sistema */
+:root{--bg:#e9eef2;--sf:#fff;--ink:#14232e;--mut:#5b6b77;--ac:#0b7285;--ln:#cdd7de;--ok:#2f855a;--wn:#b7791f;--bd:#c53030;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a22;--sf:#172630;--ink:#e3edf3;--mut:#93a6b3;--ac:#4cc9e0;--ln:#2a3d49;--ok:#48bb78;--wn:#ecc94b;--bd:#fc8181}}
+:root[data-theme="dark"]{--bg:#0f1a22;--sf:#172630;--ink:#e3edf3;--mut:#93a6b3;--ac:#4cc9e0;--ln:#2a3d49;--ok:#48bb78;--wn:#ecc94b;--bd:#fc8181}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Manrope,system-ui,Segoe UI,sans-serif}
+header{padding:18px 20px 8px;display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between}
+h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em}
+h1 small{font-weight:400;color:var(--mut);font-size:14px;margin-left:8px}
+nav{display:flex;gap:4px;overflow-x:auto;padding:0 20px;border-bottom:1px solid var(--ln)}
+nav button{background:none;border:0;border-bottom:3px solid transparent;color:var(--mut);font:600 14px Manrope,sans-serif;padding:10px 12px;cursor:pointer;white-space:nowrap}
+nav button[aria-selected="true"]{color:var(--ink);border-color:var(--ac)}
+main{padding:18px 20px 40px;max-width:1000px}
+section{display:block}section[hidden]{display:none}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:16px;margin-bottom:16px}
+h2{margin:0 0 10px;font-size:18px}
+label{display:inline-flex;flex-direction:column;font-size:13px;color:var(--mut);gap:3px;margin:0 10px 8px 0}
+input,select,textarea,button.b{font:14px "JetBrains Mono",monospace;background:var(--bg);color:var(--ink);border:1px solid var(--ln);border-radius:6px;padding:7px 9px}
+textarea{width:100%;min-height:220px}
+button.b{background:var(--ac);color:var(--sf);border-color:var(--ac);font-family:Manrope,sans-serif;font-weight:600;cursor:pointer}
+button.b.g{background:none;color:var(--ac)}
+:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--ln);white-space:nowrap}
+td input{width:100%;min-width:90px}input.bad{border-color:var(--bd)}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:3px 16px;margin:8px 0;font-family:"JetBrains Mono",monospace;font-size:13px}dt{color:var(--mut)}dd{margin:0}
+.er{color:var(--bd)}.mut{color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.fl{border:2px solid var(--ln);border-radius:6px;padding:6px;font-size:12px;text-align:center}
+.fl.ok{border-color:var(--ok)}.fl.wn{border-color:var(--wn)}.fl.bd{border-color:var(--bd)}
+.fl b{display:block;font-size:15px}
+li{margin:3px 0}
+#msg{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:6px;display:none}
+</style>
+</head>
+<body>
+<header>
+<h1>FlexARWAN<small>V0.0 · edificio de 20 pisos</small></h1>
+<div>
+<button class="b" id="sv">Guardar proyecto</button>
+<button class="b g" id="dj">Descargar JSON</button>
+<button class="b g" id="dr">Descargar README.md</button>
+</div>
+</header>
+<nav id="nv"></nav>
+<main>
+
+<!-- 1. Subnetting interactivo IPv4 e IPv6 -->
+<section id="sub">
+<div class="card"><h2>Subnetting IPv4</h2>
+<label>Red / prefijo<input id="i4" value="192.168.10.0/24"></label>
+<label>Dividir en<select id="k4"><option>1</option><option selected>4</option><option>8</option><option>16</option><option>32</option><option>64</option></select></label>
+<div id="o4"></div></div>
+<div class="card"><h2>Subnetting IPv6</h2>
+<label>Red / prefijo<input id="i6" value="2001:db8:a::/48"></label>
+<label>Mostrar /64<select id="k6"><option>4</option><option selected>8</option><option>16</option><option>20</option></select></label>
+<div id="o6"></div></div>
+</section>
+
+<!-- 2. Plan IP, VLAN y pools por piso (editable) -->
+<section id="plan" hidden>
+<div class="card"><h2>Plan IP y VLAN por piso</h2>
+<p class="mut">Edita VLAN, CIDR IPv4 y prefijo IPv6 de cada servicio. Los cambios se aplican a las configuraciones generadas.</p>
+<label>Piso<select id="fl"></select></label>
+<div class="tw"><table><thead><tr><th>Servicio</th><th>VLAN</th><th>CIDR IPv4</th><th>Pool DHCP</th><th>IPv6 /64</th></tr></thead><tbody id="pt"></tbody></table></div></div>
+</section>
+
+<!-- 3. Inventario por CSV -->
+<section id="inv" hidden>
+<div class="card"><h2>Importar inventario CSV</h2>
+<p class="mut">Columnas: hostname, fabricante, modelo, piso, puertos, rol. Si falta el número de puertos, se deduce del modelo.</p>
+<input type="file" id="fcsv" accept=".csv,text/csv">
+<button class="b g" id="ejcsv">Cargar ejemplo</button>
+<div class="tw"><table><thead><tr><th>Equipo</th><th>Fabricante</th><th>Modelo</th><th>Piso</th><th>Puertos</th><th>Rol</th></tr></thead><tbody id="it"></tbody></table></div>
+<p id="im" class="mut">Sin equipos cargados.</p></div>
+</section>
+
+<!-- 4. Generador de configuraciones -->
+<section id="cfg" hidden>
+<div class="card"><h2>Generar configuración</h2>
+<label>Fabricante<select id="vd"><option value="cisco">Cisco</option><option value="huawei">Huawei</option><option value="fortinet">Fortinet</option><option value="mikrotik">MikroTik</option><option value="hp">HP / Aruba</option></select></label>
+<label>Piso<select id="fg"></select></label>
+<button class="b" id="gn">Generar</button>
+<button class="b g" id="cp">Copiar</button>
+<button class="b g" id="dc">Descargar .txt</button>
+<textarea id="out" spellcheck="false" placeholder="La configuración aparece aquí."></textarea></div>
+</section>
+
+<!-- 5. Simulador de failover -->
+<section id="fo" hidden>
+<div class="card"><h2>Prueba de failover</h2>
+<p class="mut">Desmarca un enlace para simular su caída y observa el estado de cada piso.</p>
+<label><span><input type="checkbox" id="isp1" checked> ISP 1</span></label>
+<label><span><input type="checkbox" id="isp2" checked> ISP 2</span></label>
+<label><span><input type="checkbox" id="coreA" checked> Uplink core A</span></label>
+<label><span><input type="checkbox" id="coreB" checked> Uplink core B</span></label>
+<p id="fs"></p><div class="grid" id="fgrid"></div></div>
+</section>
+
+<!-- 6. Panel IA local basado en reglas (no envía datos fuera) -->
+<section id="ia" hidden>
+<div class="card"><h2>Panel IA local</h2>
+<p class="mut">Pega una configuración o usa la generada. El análisis ocurre en tu navegador.</p>
+<textarea id="iat" spellcheck="false"></textarea>
+<button class="b" id="ian">Analizar</button> <button class="b g" id="iag">Usar la generada</button>
+<ul id="iar"></ul></div>
+</section>
+
+<!-- 7. Credenciales seguras -->
+<section id="acc" hidden>
+<div class="card"><h2>Usuario y contraseña seguros</h2>
+<button class="b" id="gc">Generar credenciales</button>
+<dl><dt>Usuario</dt><dd id="cu">—</dd><dt>Contraseña</dt><dd id="cpw">—</dd></dl>
+<p class="mut">No se guardan en el proyecto. Cópialas a tu gestor de contraseñas.</p></div>
+<div class="card"><h2>Alcance de esta versión</h2>
+<p class="mut">SSH y Telnet no se pueden abrir desde una página web. Para aplicar los scripts a los equipos, copia la configuración y pégala en la consola, o usa un agente local (por ejemplo Ansible o Netmiko).</p></div>
+</section>
+</main>
+<div id="msg" role="status"></div>
+
+<script>
+/* ===== Utilidades ===== */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const toast=t=>{const m=$("#msg");m.textContent=t;m.style.display="block";setTimeout(()=>m.style.display="none",1800)};
+const dl=(n,t,ty="text/plain")=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([t],{type:ty}));a.download=n;a.click()};
+
+/* ===== IPv4 ===== */
+const pfx=n=>n===0?0:((0xFFFFFFFF<<(32-n))>>>0);
+const i2s=n=>[n>>>24,(n>>>16)&255,(n>>>8)&255,n&255].join(".");
+const s2i=s=>{const p=s.trim().split(".").map(Number);if(p.length!==4||p.some(x=>!(x>=0&&x<=255)||!Number.isInteger(x)))return null;return((p[0]<<24)|(p[1]<<16)|(p[2]<<8)|p[3])>>>0};
+function v4(ip,n){const a=s2i(ip);if(a===null||!(n>=0&&n<=32))return null;
+ const m=pfx(n),net=(a&m)>>>0,bc=(net|(~m>>>0))>>>0;
+ return{net,bc,mask:m,n,first:n>=31?net:net+1,last:n>=31?bc:bc-1,hosts:n===32?1:n===31?2:2**(32-n)-2}}
+const pc=c=>{const m=(c||"").trim().match(/^([\d.]+)\/(\d+)$/);return m?v4(m[1],+m[2]):null};
+const kv=o=>"<dl>"+Object.entries(o).map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")+"</dl>";
+
+function calc4(){
+ const r=pc($("#i4").value);
+ if(!r){$("#o4").innerHTML='<p class="er">Escribe una red válida, por ejemplo 192.168.10.0/24.</p>';return}
+ let h=kv({Red:i2s(r.net)+"/"+r.n,"Máscara":i2s(r.mask),Broadcast:i2s(r.bc),"Primer host":i2s(r.first),"Último host":i2s(r.last),"Hosts útiles":r.hosts.toLocaleString("es")});
+ const add=Math.ceil(Math.log2(+$("#k4").value)),nn=r.n+add;
+ if(add>0){
+  if(nn>32)h+='<p class="er">No se puede dividir tanto este prefijo.</p>';
+  else{let t="";for(let i=0;i<Math.min(2**add,64);i++){const s=v4(i2s((r.net+i*2**(32-nn))>>>0),nn);
+   t+=`<tr><td>${i2s(s.net)}/${nn}</td><td>${i2s(s.first)}</td><td>${i2s(s.last)}</td><td>${i2s(s.bc)}</td><td>${s.hosts}</td></tr>`}
+   h+=`<div class="tw"><table><thead><tr><th>Subred</th><th>Primer host</th><th>Último host</th><th>Broadcast</th><th>Hosts</th></tr></thead><tbody>${t}</tbody></table></div>`}}
+ $("#o4").innerHTML=h}
+
+/* ===== IPv6 (BigInt) ===== */
+function p6(s){const parts=s.trim().split("::");if(parts.length>2)return null;
+ const a=parts[0]?parts[0].split(":"):[],b=parts[1]?parts[1].split(":"):[];
+ let g=parts.length===1?a:[...a,...Array(8-a.length-b.length).fill("0"),...b];
+ if(g.length!==8||g.some(x=>!/^[0-9a-f]{1,4}$/i.test(x)))return null;
+ return BigInt("0x"+g.map(x=>x.padStart(4,"0")).join(""))}
+function f6(v){const g=[];for(let i=7;i>=0;i--)g.push(Number((v>>BigInt(i*16))&0xffffn).toString(16));
+ let bs=-1,bl=0;for(let i=0;i<8;){if(g[i]==="0"){let j=i;while(j<8&&g[j]==="0")j++;if(j-i>bl){bs=i;bl=j-i}i=j}else i++}
+ return bl>1?g.slice(0,bs).join(":")+"::"+g.slice(bs+bl).join(":"):g.join(":")}
+function calc6(){
+ const m=$("#i6").value.trim().match(/^(.+)\/(\d+)$/),a=m&&p6(m[1]),n=m&&+m[2];
+ if(a===null||a===undefined||n>128){$("#o6").innerHTML='<p class="er">Escribe una red válida, por ejemplo 2001:db8:a::/48.</p>';return}
+ const host=(1n<<BigInt(128-n))-1n,net=a&~host,last=net|host;
+ let h=kv({Red:f6(net)+"/"+n,"Primera":f6(net),"Última":f6(last),"Direcciones":(host+1n).toString()});
+ if(n<=64){let t="";const k=Math.min(+$("#k6").value,Number(1n<<BigInt(64-n)));
+  for(let i=0;i<k;i++)t+=`<li>${f6(net+(BigInt(i)<<64n))}/64</li>`;h+=`<ul>${t}</ul>`}
+ $("#o6").innerHTML=h}
+
+/* ===== Estado del proyecto ===== */
+const SV=[["datos",100],["voz",200],["video",300],["wifi",400],["cctv",500]];
+const S={ver:"V0.0",plan:{},inv:[]};
+function mkPlan(){for(let f=1;f<=20;f++)S.plan[f]=SV.map(([s,b],i)=>({s,vlan:b+f,cidr:`10.${f}.${i*10}.0/24`,v6:`2001:db8:${f.toString(16)}:${i}::/64`}))}
+const persist=()=>{try{localStorage.setItem("flexarwan",JSON.stringify(S));return true}catch(e){return false}};
+function restore(){try{const j=JSON.parse(localStorage.getItem("flexarwan")||"null");if(j&&j.plan){S.plan=j.plan;S.inv=j.inv||[];return}}catch(e){}mkPlan()}
+const pool=c=>{const r=pc(c);return r&&r.hosts>=20?i2s(r.net+10)+" – "+i2s(r.bc-5):"—"};
+
+function rp(){const f=+$("#fl").value;
+ $("#pt").innerHTML=S.plan[f].map((r,i)=>`<tr><td>${r.s}</td><td><input type="number" data-i="${i}" data-k="vlan" value="${r.vlan}" min="1" max="4094"></td>
+ <td><input data-i="${i}" data-k="cidr" value="${r.cidr}" class="${pc(r.cidr)?"":"bad"}"></td><td>${pool(r.cidr)}</td>
+ <td><input data-i="${i}" data-k="v6" value="${r.v6}" class="${p6(r.v6.split("/")[0])!==null?"":"bad"}"></td></tr>`).join("")}
+$("#pt").addEventListener("input",e=>{const t=e.target,row=S.plan[$("#fl").value][t.dataset.i],k=t.dataset.k;
+ row[k]=k==="vlan"?+t.value:t.value;
+ if(k==="cidr"){t.className=pc(t.value)?"":"bad";t.closest("tr").children[3].textContent=pool(t.value)}
+ if(k==="v6")t.className=p6(t.value.split("/")[0])!==null?"":"bad"});
+
+/* ===== Inventario CSV ===== */
+const canon=v=>/cisco/i.test(v)?"Cisco":/huawei/i.test(v)?"Huawei":/forti/i.test(v)?"Fortinet":/mikro/i.test(v)?"MikroTik":/hp|aruba/i.test(v)?"HP":v||"Desconocido";
+function parseCSV(t){const L=t.split(/\r?\n/).filter(x=>x.trim());if(L.length&&/hostname/i.test(L[0]))L.shift();
+ S.inv=L.map(l=>{const c=l.split(",").map(x=>x.trim());let p=+c[4];
+  if(!p){const m=(c[2]||"").match(/(48|24|16|8)/);p=m?+m[1]:0}
+  return{host:c[0],vendor:canon(c[1]),model:c[2]||"",floor:+c[3]||0,ports:p,role:c[5]||""}});
+ ri();persist()}
+function ri(){$("#it").innerHTML=S.inv.map(d=>`<tr><td>${d.host}</td><td>${d.vendor}</td><td>${d.model}</td><td>${d.floor}</td><td>${d.ports||"?"}</td><td>${d.role}</td></tr>`).join("");
+ $("#im").textContent=S.inv.length?S.inv.length+" equipos cargados.":"Sin equipos cargados."}
+const EJ="hostname,fabricante,modelo,piso,puertos,rol\nSW-P1,Cisco,Catalyst 9300-48,1,,switch\nSW-P2,Huawei,S5735-L24,2,,switch\nFW-CORE,Fortinet,FortiGate 100F,0,,firewall\nRT-EDGE,MikroTik,CCR2004,0,12,router\nAP-P1,HP,Aruba AP-515,1,2,access point";
+$("#ejcsv").onclick=()=>parseCSV(EJ);
+$("#fcsv").onchange=e=>{const f=e.target.files[0];if(f)f.text().then(parseCSV)};
+
+/* ===== Generador de configuraciones ===== */
+const hardening={cisco:"ip ssh version 2\nno ip http server\nno ip http secure-server\nline vty 0 15\n transport input ssh\n login local\n exec-timeout 10 0\n",
+ huawei:"stelnet server enable\ntelnet server disable\nuser-interface vty 0 4\n authentication-mode aaa\n protocol inbound ssh\n",
+ hp:"no telnet-server\nip ssh\nno web-management\n",mikrotik:"/ip service disable telnet,ftp,www,api,api-ssl\n/ip service set ssh port=22\n",
+ fortinet:""};
+function genFloor(v,f){const rows=S.plan[f],ok=rows.filter(r=>pc(r.cidr));let o=`\n! ===== Piso ${f} (${v}) =====\n`;
+ const ids=ok.map(r=>r.vlan);
+ const inv=S.inv.filter(d=>d.floor===f).map(d=>`! Equipo: ${d.host} ${d.vendor} ${d.model} (${d.ports||"?"} puertos)`).join("\n");
+ if(inv)o+=inv+"\n";
+ rows.forEach(r=>{if(!pc(r.cidr))o+=`! ERROR: CIDR inválido en ${r.s}: ${r.cidr}\n`});
+ const gw=r=>{const c=pc(r.cidr);return{ip:i2s(c.first),mask:i2s(c.mask),n:c.n}};
+ if(v==="cisco"){o+=`hostname SW-P${f}\nip domain-name flexarwan.local\n`;
+  ok.forEach(r=>{const g=gw(r);o+=`vlan ${r.vlan}\n name ${r.s.toUpperCase()}-P${f}\ninterface Vlan${r.vlan}\n ip address ${g.ip} ${g.mask}\n no shutdown\n`});
+  o+=`interface range GigabitEthernet1/0/47-48\n description UPLINK-CORE-A-B\n switchport mode trunk\n switchport trunk allowed vlan ${ids.join(",")}\n`}
+ else if(v==="huawei"){o+=`sysname SW-P${f}\nvlan batch ${ids.join(" ")}\n`;
+  ok.forEach(r=>{const g=gw(r);o+=`interface Vlanif${r.vlan}\n description ${r.s.toUpperCase()}-P${f}\n ip address ${g.ip} ${g.mask}\n`});
+  o+=`interface GigabitEthernet0/0/47\n port link-type trunk\n port trunk allow-pass vlan ${ids.join(" ")}\n`}
+ else if(v==="fortinet"){o+="config system interface\n";
+  ok.forEach(r=>{const g=gw(r);o+=` edit "vl${r.vlan}"\n  set vdom "root"\n  set ip ${g.ip} ${g.mask}\n  set allowaccess ping https ssh\n  set interface "port1"\n  set vlanid ${r.vlan}\n  set alias "${r.s}-P${f}"\n next\n`});o+="end\n"}
+ else if(v==="mikrotik"){o+=`/interface bridge add name=br-p${f} vlan-filtering=yes\n`;
+  ok.forEach(r=>{const g=gw(r);o+=`/interface vlan add name=vlan${r.vlan} interface=br-p${f} vlan-id=${r.vlan}\n/ip address add address=${g.ip}/${g.n} interface=vlan${r.vlan} comment="${r.s}-P${f}"\n`})}
+ else{o+=`hostname "SW-P${f}"\n`;
+  ok.forEach(r=>{const g=gw(r);o+=`vlan ${r.vlan}\n name "${r.s.toUpperCase()}-P${f}"\n ip address ${g.ip} ${g.mask}\n tagged 47-48\n exit\n`})}
+ return o}
+function gen(){const v=$("#vd").value,s=$("#fg").value,fl=s==="all"?[...Array(20).keys()].map(i=>i+1):[+s];
+ let o=`! FlexARWAN ${S.ver} · ${v} · ${new Date().toISOString().slice(0,10)}\n! Revisa cada línea en laboratorio antes de aplicarla en producción.\n`+(hardening[v]?"\n"+hardening[v]:"");
+ fl.forEach(f=>o+=genFloor(v,f));$("#out").value=o;toast("Configuración generada")}
+$("#gn").onclick=gen;
+$("#cp").onclick=()=>{$("#out").select();navigator.clipboard?.writeText($("#out").value).then(()=>toast("Copiado")).catch(()=>toast("Selecciona y copia manualmente"))};
+$("#dc").onclick=()=>dl(`flexarwan-${$("#vd").value}.txt`,$("#out").value);
+
+/* ===== Failover ===== */
+function rf(){const st=id=>$("#"+id).checked,wan=st("isp1")||st("isp2"),paths=(st("coreA")?1:0)+(st("coreB")?1:0);
+ const cls=!wan||paths===0?"bd":paths===1?"wn":"ok",txt=!wan?"Sin salida a Internet":paths===0?"Pisos aislados del core":paths===1?"Redundancia perdida en todos los pisos":"Redundancia completa";
+ $("#fs").textContent=txt+(wan&&!(st("isp1")&&st("isp2"))?" · operando con un solo ISP":"");
+ $("#fgrid").innerHTML=[...Array(20).keys()].map(i=>`<div class="fl ${cls}"><b>P${i+1}</b>${cls==="ok"?"2 de 2":cls==="wn"?"1 de 2":"0 de 2"}</div>`).join("")}
+$$("#fo input").forEach(i=>i.onchange=rf);
+
+/* ===== Panel IA local (reglas) ===== */
+const RULES=[[/telnet/i,"bd","Telnet detectado: usa SSH versión 2."],[/snmp.*(public|private)/i,"bd","Comunidad SNMP por defecto: cámbiala o usa SNMPv3."],
+ [/password\s+(cisco|admin|1234|password)\b/i,"bd","Contraseña débil o por defecto."],[/permit\s+(ip\s+)?any\s+any|accept.*all/i,"wn","Regla permisiva any-any: acota origen y destino."],
+ [/ip http server|set allowaccess.*http\b|\bwww\b(?!.*disable)/i,"wn","Administración HTTP sin cifrar: usa HTTPS."],[/ftp/i,"wn","FTP habilitado: usa SFTP."],
+ [/vlan\s+1\b/i,"wn","VLAN 1 en uso: muévela a una VLAN dedicada."]];
+function ana(){const t=$("#iat").value,f=RULES.filter(r=>r[0].test(t));
+ const need=[[/ssh/i,"No hay SSH configurado."],[/trunk|allowed vlan|allow-pass/i,"No hay trunks con VLAN permitidas explícitas."]].filter(x=>!x[0].test(t));
+ const all=[...f.map(r=>[r[1],r[2]]),...need.map(x=>["wn",x[1]])];
+ $("#iar").innerHTML=all.length?all.map(a=>`<li class="${a[0]==="bd"?"er":""}">${a[0]==="bd"?"Riesgo alto: ":"Revisar: "}${a[1]}</li>`).join(""):"<li>No se encontraron configuraciones inseguras con las reglas actuales.</li>"}
+$("#ian").onclick=ana;$("#iag").onclick=()=>{$("#iat").value=$("#out").value;ana()};
+
+/* ===== Credenciales ===== */
+function rnd(n,set){const b=new Uint32Array(n);crypto.getRandomValues(b);return[...b].map(x=>set[x%set.length]).join("")}
+$("#gc").onclick=()=>{const L="abcdefghjkmnpqrstuvwxyz",U="ABCDEFGHJKLMNPQRSTUVWXYZ",D="23456789",Y="!#$%*+-=?@";
+ let p=rnd(1,U)+rnd(1,D)+rnd(1,Y)+rnd(1,L)+rnd(16,L+U+D+Y);
+ p=[...p].sort(()=>crypto.getRandomValues(new Uint8Array(1))[0]-128).join("");
+ $("#cu").textContent="adm-"+rnd(6,L+D);$("#cpw").textContent=p};
+
+/* ===== Guardado y README para GitHub ===== */
+$("#sv").onclick=()=>toast(persist()?"Proyecto guardado en este navegador":"No se pudo guardar aquí; usa Descargar JSON");
+$("#dj").onclick=()=>dl("flexarwan-proyecto.json",JSON.stringify(S,null,2),"application/json");
+$("#dr").onclick=()=>dl("README.md",`# FlexARWAN ${S.ver}\n\nHerramienta web (un solo archivo) para planificar y configurar la red de un edificio de 20 pisos: subnetting IPv4/IPv6, plan IP y VLAN por piso, importación CSV, configuraciones Cisco, Huawei, Fortinet, MikroTik y HP, prueba de failover y panel de revisión local.\n\n## Despliegue en GitHub Pages\n1. Crea el repositorio y sube \`index.html\` y este \`README.md\`.\n2. En Settings > Pages elige la rama main y la carpeta root.\n\n## Versión\n${S.ver}: primera entrega. Revisa siempre las configuraciones en laboratorio antes de producción.\n`);
+
+/* ===== Arranque ===== */
+const NAV=[["sub","Subnetting"],["plan","Plan IP y VLAN"],["inv","Inventario CSV"],["cfg","Configuración"],["fo","Failover"],["ia","Panel IA local"],["acc","Acceso"]];
+$("#nv").innerHTML=NAV.map(([i,t])=>`<button data-t="${i}" aria-selected="false">${t}</button>`).join("");
+function tab(n){$$("main>section").forEach(s=>s.hidden=s.id!==n);$$("#nv button").forEach(b=>b.setAttribute("aria-selected",b.dataset.t===n))}
+$("#nv").onclick=e=>{if(e.target.dataset.t)tab(e.target.dataset.t)};
+restore();
+const opts=[...Array(20).keys()].map(i=>`<option value="${i+1}">Piso ${i+1}</option>`).join("");
+$("#fl").innerHTML=opts;$("#fg").innerHTML='<option value="all">Todos los pisos</option>'+opts;
+$("#fl").onchange=rp;
+["i4","k4"].forEach(i=>$("#"+i).oninput=calc4);["i6","k6"].forEach(i=>$("#"+i).oninput=calc6);
+calc4();calc6();rp();ri();rf();tab("sub");
+</script>
+</body>
+</html>
